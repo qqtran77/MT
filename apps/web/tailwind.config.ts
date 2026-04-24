@@ -36,6 +36,7 @@ const config: Config = {
           900: '#103562',
         },
         accent: '#f0a500',
+        border: 'hsl(214.3 31.8% 91.4%)',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],

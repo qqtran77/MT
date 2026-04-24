@@ -88,6 +88,14 @@ export function Header() {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
                     <Link
+                      href="/dashboard"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <span className="text-gray-500">📊</span>
+                      <span className="text-sm text-gray-700 font-semibold">Dashboard quản lý</span>
+                    </Link>
+                    <Link
                       href="/profile"
                       className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                       onClick={() => setShowUserMenu(false)}

@@ -129,15 +129,18 @@ export interface Transaction {
 export const authApi = {
   login: async (email: string, password: string) => {
     const res = await apiClient.post('/auth/login', { email, password });
-    return res.data;
+    // Backend trả về { data: { access_token, user } } hoặc { access_token, user }
+    const payload = res.data?.data || res.data;
+    return { token: payload?.access_token, user: payload?.user };
   },
-  register: async (data: { name: string; email: string; phone: string; password: string }) => {
+  register: async (data: any) => {
     const res = await apiClient.post('/auth/register', data);
-    return res.data;
+    const payload = res.data?.data || res.data;
+    return { token: payload?.access_token, user: payload?.user };
   },
   getProfile: async (): Promise<Customer> => {
-    const res = await apiClient.get('/auth/profile');
-    return res.data;
+    const res = await apiClient.get('/auth/me');
+    return res.data?.data || res.data;
   },
 };
 

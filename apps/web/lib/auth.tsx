@@ -5,12 +5,30 @@ import { authApi } from './api';
 
 export interface AuthUser {
   id: string;
+  _id?: string;
   name: string;
+  fullName?: string;
   email: string;
-  phone: string;
+  phone?: string;
+  role?: string;
   walletBalance: number;
   points: number;
-  tier: 'silver' | 'gold' | 'platinum';
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+}
+
+function mapUser(raw: any): AuthUser {
+  return {
+    id: raw?._id || raw?.id || '',
+    _id: raw?._id || raw?.id || '',
+    name: raw?.fullName || raw?.name || 'Người dùng',
+    fullName: raw?.fullName || raw?.name || '',
+    email: raw?.email || '',
+    phone: raw?.phone || '',
+    role: raw?.role || 'staff',
+    walletBalance: raw?.walletBalance || 0,
+    points: raw?.loyaltyPoints || raw?.points || 0,
+    tier: raw?.tier || 'bronze',
+  };
 }
 
 interface AuthContextType {
@@ -18,7 +36,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => void;
 }
 
@@ -31,12 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
+      if (!token) { setIsLoading(false); return; }
       const profile = await authApi.getProfile();
-      setUser(profile as AuthUser);
+      setUser(mapUser(profile));
     } catch {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
@@ -45,22 +60,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+  useEffect(() => { loadUser(); }, [loadUser]);
 
   const login = async (email: string, password: string) => {
     const data = await authApi.login(email, password);
+    if (!data.token) throw new Error('Đăng nhập thất bại');
     localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    const mapped = mapUser(data.user);
+    localStorage.setItem('user', JSON.stringify(mapped));
+    setUser(mapped);
   };
 
-  const register = async (formData: { name: string; email: string; phone: string; password: string }) => {
+  const register = async (formData: any) => {
     const data = await authApi.register(formData);
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token);
+      const mapped = mapUser(data.user);
+      localStorage.setItem('user', JSON.stringify(mapped));
+      setUser(mapped);
+    }
   };
 
   const logout = () => {
@@ -71,16 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -88,9 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }
 
