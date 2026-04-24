@@ -50,8 +50,10 @@ export default function InventoryPage() {
   const [orderMsg, setOrderMsg] = useState('');
 
   const load = async () => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const branchParam = user.role !== 'admin' && user.branchId ? `?branchId=${user.branchId}` : '';
     const [all, low]: any = await Promise.all([
-      apiFetch('/inventory').catch(() => []),
+      apiFetch(`/inventory${branchParam}`).catch(() => []),
       apiFetch('/inventory/low-stock').catch(() => []),
     ]);
     setItems(Array.isArray(all) ? all : []);

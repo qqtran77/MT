@@ -11,6 +11,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { RevenueModule } from './revenue/revenue.module';
 import { PosModule } from './pos/pos.module';
 import { CustomersModule } from './customers/customers.module';
+import { CommissionModule } from './commission/commission.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CustomersModule } from './customers/customers.module';
     RevenueModule,
     PosModule,
     CustomersModule,
+    CommissionModule,
   ],
 })
 export class AppModule {}

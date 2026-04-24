@@ -18,7 +18,7 @@ export class RevenueService {
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    const filter: any = { tenantId: user.tenantId, status: 'paid' };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), status: 'paid' };
     if (branchId) filter.branchId = new Types.ObjectId(branchId);
 
     const [todayRevenue, monthRevenue, lastMonthRevenue] = await Promise.all([
@@ -37,7 +37,7 @@ export class RevenueService {
 
   async getChartData(user: any, branchId?: string, days = 30) {
     const start = new Date(); start.setDate(start.getDate() - days);
-    const filter: any = { tenantId: user.tenantId, status: 'paid', createdAt: { $gte: start } };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), status: 'paid', createdAt: { $gte: start } };
     if (branchId) filter.branchId = new Types.ObjectId(branchId);
 
     const data = await this.invoiceModel.aggregate([
@@ -52,7 +52,7 @@ export class RevenueService {
     const now = new Date();
     const start = month ? new Date(month + '-01') : new Date(now.getFullYear(), now.getMonth(), 1);
     const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
-    const filter: any = { tenantId: user.tenantId, status: 'paid', createdAt: { $gte: start, $lte: end } };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), status: 'paid', createdAt: { $gte: start, $lte: end } };
 
     return this.invoiceModel.aggregate([
       { $match: filter },
@@ -65,7 +65,7 @@ export class RevenueService {
   }
 
   async getTopProducts(user: any, branchId?: string, limit = 10) {
-    const filter: any = { tenantId: user.tenantId, status: 'paid' };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), status: 'paid' };
     if (branchId) filter.branchId = new Types.ObjectId(branchId);
 
     return this.invoiceModel.aggregate([

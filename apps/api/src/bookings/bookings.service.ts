@@ -9,7 +9,7 @@ export class BookingsService {
   constructor(@InjectModel(Booking.name) private model: Model<BookingDocument>) {}
 
   findAll(user: any, branchId?: string, industry?: string, status?: string) {
-    const filter: any = { tenantId: user.tenantId };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}) };
     if (branchId) filter.branchId = new Types.ObjectId(branchId);
     if (industry) filter.industry = industry;
     if (status) filter.status = status;

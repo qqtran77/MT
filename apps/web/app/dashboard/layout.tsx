@@ -43,6 +43,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/staff', label: 'Nhân viên', icon: '👥', roles: ['admin', 'branch_manager'] },
       { href: '/dashboard/branches', label: 'Chi nhánh', icon: '🏢', roles: ['admin'] },
+      { href: '/dashboard/location', label: 'Địa chỉ cơ sở', icon: '📍', roles: ['admin', 'branch_manager', 'staff'] },
     ],
   },
   {
@@ -56,6 +57,7 @@ const NAV_GROUPS = [
     label: 'TÀI CHÍNH',
     items: [
       { href: '/dashboard/revenue', label: 'Doanh thu', icon: '💰', roles: ['admin', 'branch_manager', 'accountant'] },
+      { href: '/dashboard/commission', label: 'Hoa hồng giới thiệu', icon: '🤝', roles: ['admin', 'branch_manager', 'accountant', 'staff'] },
       { href: '/dashboard/invoices', label: 'Hóa đơn', icon: '🧾', roles: ['admin', 'accountant'] },
     ],
   },
@@ -63,6 +65,7 @@ const NAV_GROUPS = [
     label: 'MARKETING',
     items: [
       { href: '/dashboard/social', label: 'Mạng xã hội', icon: '📱', roles: ['admin', 'branch_manager'] },
+      { href: '/dashboard/commission', label: 'Hoa hồng giới thiệu', icon: '🔗', roles: ['admin', 'branch_manager', 'staff'] },
     ],
   },
 ];

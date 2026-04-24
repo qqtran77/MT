@@ -9,7 +9,7 @@ export class CustomersService {
   constructor(@InjectModel(Customer.name) private model: Model<CustomerDocument>) {}
 
   findAll(user: any, search?: string) {
-    const filter: any = { tenantId: user.tenantId, isActive: true };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), isActive: true };
     if (search) filter.$or = [{ fullName: { $regex: search, $options: 'i' } }, { phone: { $regex: search } }, { email: { $regex: search, $options: 'i' } }];
     return this.model.find(filter).sort({ totalSpent: -1 }).limit(100).lean();
   }

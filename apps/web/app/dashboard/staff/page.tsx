@@ -133,11 +133,14 @@ function Tab1Staff() {
     employeeType: 'full-time', baseSalary: '', branchId: '', startDate: '',
   });
 
+  const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+  const branchParam = user.role !== 'admin' && user.branchId ? `?branchId=${user.branchId}` : '';
+
   useEffect(() => {
-    apiFetch('/staff').then(d => { if (Array.isArray(d) && d.length) setStaff(d); }).catch(() => {});
+    apiFetch(`/staff${branchParam}`).then(d => { if (Array.isArray(d) && d.length) setStaff(d); }).catch(() => {});
   }, []);
 
-  const reload = () => apiFetch('/staff').then(d => { if (Array.isArray(d) && d.length) setStaff(d); }).catch(() => {});
+  const reload = () => apiFetch(`/staff${branchParam}`).then(d => { if (Array.isArray(d) && d.length) setStaff(d); }).catch(() => {});
 
   async function handleSave() {
     if (!form.fullName) { alert('Vui lòng nhập họ tên'); return; }

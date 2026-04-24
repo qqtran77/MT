@@ -13,13 +13,13 @@ export class InventoryService {
   ) {}
 
   findAll(user: any, branchId?: string) {
-    const filter: any = { tenantId: user.tenantId, isActive: true };
+    const filter: any = { ...(user.tenantId ? { tenantId: user.tenantId } : {}), isActive: true };
     if (branchId) filter.branchId = new Types.ObjectId(branchId);
     return this.itemModel.find(filter).sort({ name: 1 }).lean();
   }
 
   findLowStock(user: any) {
-    return this.itemModel.find({ tenantId: user.tenantId, isActive: true, $expr: { $lte: ['$quantity', '$minQuantity'] } }).lean();
+    return this.itemModel.find({ ...(user.tenantId ? { tenantId: user.tenantId } : {}), isActive: true, $expr: { $lte: ['$quantity', '$minQuantity'] } }).lean();
   }
 
   async create(dto: CreateInventoryItemDto, user: any) {

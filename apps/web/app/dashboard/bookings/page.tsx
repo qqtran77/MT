@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 async function apiFetch(path: string, opts?: any) {
@@ -17,16 +18,30 @@ export default function BookingsPage() {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [userBranchId, setUserBranchId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string>('staff');
+
+  useEffect(() => {
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      setUserRole(u.role || 'staff');
+      setUserBranchId(u.branchId ? String(u.branchId) : null);
+    }
+  }, []);
 
   async function load() {
     setLoading(true);
-    const q = filter !== 'all' ? `?status=${filter}` : '';
+    const params = new URLSearchParams();
+    if (filter !== 'all') params.set('status', filter);
+    if (userRole !== 'admin' && userBranchId) params.set('branchId', userBranchId);
+    const q = params.toString() ? `?${params.toString()}` : '';
     const data = await apiFetch(`/bookings${q}`).catch(() => []);
     setBookings(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [filter, userBranchId, userRole]);
 
   async function doAction(id: string, action: string) {
     await apiFetch(`/bookings/${id}/${action}`, { method: 'POST' });
@@ -70,6 +85,10 @@ export default function BookingsPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-gray-800">📅 Danh sách đặt phòng ({filtered.length})</h3>
+          <Link href="/booking/hotel"
+            className="bg-[#1a3a5c] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#15304f] transition flex items-center gap-1.5">
+            + Tạo đặt phòng mới
+          </Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

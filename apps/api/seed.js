@@ -38,6 +38,24 @@ const INVENTORY_DATA = [
   { name:'Nước ngọt',          category:'cinema',  unit:'lon',  quantity:240, minQuantity:80,  unitPrice:15000,  description:'Nước ngọt có ga các loại 330ml' },
 ];
 
+const invoiceSamples = [
+  { source:'hotel', total:2800000, method:'card', guestName:'Nguyễn Văn A', items:[{name:'Phòng Deluxe 2 đêm',quantity:1,price:2800000,total:2800000}] },
+  { source:'cafe', total:285000, method:'cash', guestName:'Trần Thị B', items:[{name:'Cà phê đen',quantity:2,price:45000,total:90000},{name:'Bánh croissant',quantity:3,price:65000,total:195000}] },
+  { source:'cinema', total:450000, method:'wallet', guestName:'Lê Hoàng C', items:[{name:'Vé xem phim - 4 ghế',quantity:4,price:90000,total:360000},{name:'Bỏng ngô lớn',quantity:2,price:45000,total:90000}] },
+  { source:'hotel', total:5500000, method:'card', guestName:'Phạm Thị D', items:[{name:'Penthouse 1 đêm',quantity:1,price:5500000,total:5500000}] },
+  { source:'cafe', total:195000, method:'cash', guestName:'Hoàng Văn E', items:[{name:'Trà sữa',quantity:3,price:65000,total:195000}] },
+  { source:'cinema', total:180000, method:'cash', guestName:'Vũ Thị F', items:[{name:'Vé xem phim - 2 ghế',quantity:2,price:90000,total:180000}] },
+  { source:'hotel', total:1500000, method:'wallet', guestName:'Đặng Văn G', items:[{name:'Phòng Superior 1 đêm',quantity:1,price:1500000,total:1500000}] },
+  { source:'cafe', total:350000, method:'card', guestName:'Bùi Thị H', items:[{name:'Sinh tố xoài',quantity:2,price:75000,total:150000},{name:'Bánh mì sandwich',quantity:2,price:100000,total:200000}] },
+  { source:'hotel', total:900000, method:'cash', guestName:'Lý Văn I', items:[{name:'Phòng Standard 1 đêm',quantity:1,price:900000,total:900000}] },
+  { source:'cinema', total:360000, method:'wallet', guestName:'Ngô Thị J', items:[{name:'Vé VIP - 2 ghế',quantity:2,price:120000,total:240000},{name:'Combo bỏng + nước',quantity:2,price:60000,total:120000}] },
+  { source:'hotel', total:3600000, method:'card', guestName:'Trương Văn K', items:[{name:'Suite 2 đêm',quantity:1,price:3600000,total:3600000}] },
+  { source:'cafe', total:420000, method:'cash', guestName:'Đinh Thị L', items:[{name:'Cà phê cappuccino',quantity:4,price:55000,total:220000},{name:'Set bánh ngọt',quantity:1,price:200000,total:200000}] },
+  { source:'cinema', total:540000, method:'card', guestName:'Phan Văn M', items:[{name:'Vé xem phim - 6 ghế',quantity:6,price:90000,total:540000}] },
+  { source:'hotel', total:2100000, method:'wallet', guestName:'Mai Thị N', items:[{name:'Phòng Executive 1 đêm',quantity:1,price:2100000,total:2100000}] },
+  { source:'cafe', total:165000, method:'cash', guestName:'Cao Văn O', items:[{name:'Nước ép cam',quantity:3,price:55000,total:165000}] },
+];
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function skipIfExists(db, collectionName, label) {
@@ -47,6 +65,12 @@ async function skipIfExists(db, collectionName, label) {
     return true;
   }
   return false;
+}
+
+function randomDateWithinDays(days) {
+  const now = Date.now();
+  const offset = Math.floor(Math.random() * days * 24 * 60 * 60 * 1000);
+  return new Date(now - offset);
 }
 
 // ─── Seed ────────────────────────────────────────────────────────────────────
@@ -60,6 +84,8 @@ async function seed() {
   let seededUsers = 0;
   let seededCustomers = 0;
   let seededInventory = 0;
+  let seededInvoices = 0;
+  let seededCommissions = 0;
 
   // ── Users ────────────────────────────────────────────────────────────────
   console.log('👤 Seeding users...');
@@ -75,6 +101,7 @@ async function seed() {
   // ── Branches (seed before users so we can attach branchId) ───────────────
   console.log('🏢 Seeding branches...');
   let branchMap = {}; // name -> ObjectId
+  let branchIds = []; // array of ObjectIds for random assignment
   const branchSkipped = await skipIfExists(db, 'branches', 'branches');
 
   if (!branchSkipped) {
@@ -89,6 +116,7 @@ async function seed() {
     const existing = await db.collection('branches').find({}).toArray();
     existing.forEach(b => { branchMap[b.name] = b._id; });
   }
+  branchIds = Object.values(branchMap);
 
   // ── Users (skip entire collection or insert missing emails) ───────────────
   for (const def of userDefs) {
@@ -104,6 +132,7 @@ async function seed() {
       fullName: def.fullName,
       role: def.role,
       isActive: true,
+      tenantId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -115,12 +144,16 @@ async function seed() {
     seededUsers++;
   }
 
+  // Fetch admin and manager user for commission references
+  const adminUser = await db.collection('users').findOne({ email: 'admin@ckd.vn' });
+  const managerUser = await db.collection('users').findOne({ email: 'manager@ckd.vn' });
+
   // ── Customers ─────────────────────────────────────────────────────────────
   console.log('\n👥 Seeding customers...');
   const customerSkipped = await skipIfExists(db, 'customers', 'customers');
   if (!customerSkipped) {
     const now = new Date();
-    const toInsert = CUSTOMER_DATA.map(c => ({ ...c, isActive: true, createdAt: now, updatedAt: now }));
+    const toInsert = CUSTOMER_DATA.map(c => ({ ...c, isActive: true, tenantId: null, createdAt: now, updatedAt: now }));
     await db.collection('customers').insertMany(toInsert);
     seededCustomers = toInsert.length;
     console.log(`  ✅ Inserted ${seededCustomers} customers`);
@@ -137,9 +170,61 @@ async function seed() {
     console.log(`  ✅ Inserted ${seededInventory} inventory items`);
   }
 
+  // ── Invoices ──────────────────────────────────────────────────────────────
+  console.log('\n🧾 Seeding invoices...');
+  const invoiceSkipped = await skipIfExists(db, 'invoices', 'invoices');
+  if (!invoiceSkipped) {
+    const toInsert = invoiceSamples.map((s, i) => {
+      const createdAt = randomDateWithinDays(30);
+      return {
+        invoiceNo: `INV-${Date.now()}-${i}`,
+        source: s.source,
+        total: s.total,
+        status: 'paid',
+        paymentMethod: s.method,
+        items: s.items,
+        guestName: s.guestName,
+        branchId: branchIds.length > 0 ? branchIds[i % branchIds.length] : null,
+        tenantId: null,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    });
+    await db.collection('invoices').insertMany(toInsert);
+    seededInvoices = toInsert.length;
+    console.log(`  ✅ Inserted ${seededInvoices} invoices`);
+  }
+
+  // ── Commissions ───────────────────────────────────────────────────────────
+  console.log('\n💰 Seeding commissions...');
+  const commissionSkipped = await skipIfExists(db, 'commissions', 'commissions');
+  if (!commissionSkipped) {
+    const commissionDefs = [
+      { referralCode:'REFADM001', bookingAmount:2800000, commissionRate:0.05, commissionAmount:140000, status:'paid',     referrerId: adminUser?._id },
+      { referralCode:'REFADM002', bookingAmount:1500000, commissionRate:0.05, commissionAmount:75000,  status:'approved', referrerId: adminUser?._id },
+      { referralCode:'REFADM003', bookingAmount:450000,  commissionRate:0.05, commissionAmount:22500,  status:'pending',  referrerId: adminUser?._id },
+      { referralCode:'REFMGR001', bookingAmount:5500000, commissionRate:0.05, commissionAmount:275000, status:'paid',     referrerId: managerUser?._id },
+      { referralCode:'REFMGR002', bookingAmount:900000,  commissionRate:0.05, commissionAmount:45000,  status:'pending',  referrerId: managerUser?._id },
+    ];
+
+    const toInsert = commissionDefs.map((c, i) => {
+      const createdAt = randomDateWithinDays(30);
+      return {
+        ...c,
+        paidAt: c.status === 'paid' ? createdAt : undefined,
+        createdAt,
+        updatedAt: createdAt,
+      };
+    });
+
+    await db.collection('commissions').insertMany(toInsert);
+    seededCommissions = toInsert.length;
+    console.log(`  ✅ Inserted ${seededCommissions} commissions`);
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`✅ Seeded ${seededUsers} users, ${seededCustomers} customers, ${seededInventory} inventory items`);
+  console.log(`✅ Seeded ${seededUsers} users, ${seededCustomers} customers, ${seededInventory} inventory items, ${seededInvoices} invoices, ${seededCommissions} commissions`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('\n📋 Login credentials:');
   console.log('  Admin:       admin@ckd.vn       / Admin@123');
