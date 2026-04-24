@@ -39,20 +39,22 @@ export function generateBookingCode(): string {
   return code;
 }
 
-export function getTierLabel(tier: 'silver' | 'gold' | 'platinum'): string {
-  const labels = {
+export function getTierLabel(tier: 'bronze' | 'silver' | 'gold' | 'platinum'): string {
+  const labels: Record<string, string> = {
+    bronze: 'Đồng',
     silver: 'Bạc',
     gold: 'Vàng',
     platinum: 'Bạch Kim',
   };
-  return labels[tier];
+  return labels[tier] ?? tier;
 }
 
-export function getTierColor(tier: 'silver' | 'gold' | 'platinum'): string {
-  const colors = {
+export function getTierColor(tier: 'bronze' | 'silver' | 'gold' | 'platinum'): string {
+  const colors: Record<string, string> = {
+    bronze: 'bg-orange-100 text-orange-700',
     silver: 'bg-gray-200 text-gray-700',
     gold: 'bg-yellow-100 text-yellow-800',
     platinum: 'bg-blue-100 text-blue-800',
   };
-  return colors[tier];
+  return colors[tier] ?? 'bg-gray-100 text-gray-600';
 }

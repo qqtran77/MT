@@ -1,6 +1,6 @@
 import { cn, getTierColor, getTierLabel } from '@/lib/utils';
 import { HTMLAttributes } from 'react';
-import { Star, Award, Gem } from 'lucide-react';
+import { Star, Award, Gem, Shield } from 'lucide-react';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
@@ -30,11 +30,12 @@ export function Badge({ variant = 'default', className, children, ...props }: Ba
 }
 
 interface TierBadgeProps {
-  tier: 'silver' | 'gold' | 'platinum';
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   size?: 'sm' | 'md' | 'lg';
 }
 
 const tierIcons = {
+  bronze: Shield,
   silver: Star,
   gold: Award,
   platinum: Gem,
