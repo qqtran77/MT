@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 type ResourceType = 'hotel' | 'cafe' | 'cinema';
 type RoomStatus = 'available' | 'occupied' | 'maintenance';
+type PageTab = 'list' | 'status';
 
 interface Room {
   id: string;
@@ -19,6 +20,26 @@ interface Room {
   description: string;
   branch: string;
 }
+
+// Extended status data for the status tab view
+const ROOM_STATUS_EXTENDED = [
+  { id: '1', name: 'Phòng 101', type: 'hotel' as ResourceType, status: 'available' as const, guestName: '', checkoutTime: '', floor: 'Tầng 1' },
+  { id: '2', name: 'Phòng 201', type: 'hotel' as ResourceType, status: 'occupied' as const, guestName: 'Nguyễn Văn Hùng', checkoutTime: '12:00 hôm nay', floor: 'Tầng 2' },
+  { id: '3', name: 'Phòng 301', type: 'hotel' as ResourceType, status: 'available' as const, guestName: '', checkoutTime: '', floor: 'Tầng 3' },
+  { id: '4', name: 'Penthouse', type: 'hotel' as ResourceType, status: 'maintenance' as const, guestName: '', checkoutTime: '', floor: 'Tầng 10' },
+  { id: '5', name: 'Bàn A01', type: 'cafe' as ResourceType, status: 'available' as const, guestName: '', checkoutTime: '', floor: 'Tầng 1' },
+  { id: '6', name: 'Bàn B05', type: 'cafe' as ResourceType, status: 'occupied' as const, guestName: 'Trần Thị Lan', checkoutTime: '15:30', floor: 'Tầng 2' },
+  { id: '7', name: 'Phòng Chiếu 1', type: 'cinema' as ResourceType, status: 'available' as const, guestName: '', checkoutTime: '', floor: '' },
+  { id: '8', name: 'Phòng VIP', type: 'cinema' as ResourceType, status: 'available' as const, guestName: '', checkoutTime: '', floor: '' },
+];
+
+const AVAILABLE_TIMESLOTS = [
+  { room: 'Phòng 101', type: 'hotel', slots: ['14:00 - 20:00', '20:00 - hôm sau'] },
+  { room: 'Phòng 301', type: 'hotel', slots: ['Cả ngày'] },
+  { room: 'Bàn A01', type: 'cafe', slots: ['09:00 - 12:00', '13:00 - 18:00', '18:00 - 21:00'] },
+  { room: 'Phòng Chiếu 1', type: 'cinema', slots: ['10:00 - 12:00', '14:00 - 16:00', '19:00 - 21:30'] },
+  { room: 'Phòng VIP', type: 'cinema', slots: ['13:00 - 15:30', '16:00 - 18:30', '20:00 - 22:30'] },
+];
 
 const MOCK_ROOMS: Room[] = [
   { id: '1', name: 'Phòng 101', type: 'hotel', subType: 'Standard', capacity: 2, pricePerUnit: 900000, unit: 'đêm', status: 'available', floor: 'Tầng 1', amenities: ['Wi-Fi', 'TV', 'Điều hòa'], description: 'Phòng tiêu chuẩn 2 giường đơn', branch: 'Khách sạn Grand Q.1' },
@@ -39,6 +60,7 @@ const STATUS_CONFIG: Record<RoomStatus, { label: string; color: string }> = {
 };
 
 export default function RoomsPage() {
+  const [pageTab, setPageTab] = useState<PageTab>('list');
   const [rooms, setRooms] = useState<Room[]>(MOCK_ROOMS);
   const [filter, setFilter] = useState<ResourceType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<RoomStatus | 'all'>('all');
@@ -104,8 +126,151 @@ export default function RoomsPage() {
     }));
   }
 
+  const TYPE_ICON_MAP: Record<ResourceType, string> = { hotel: '🏨', cafe: '☕', cinema: '🎬' };
+
+  const STATUS_VIEW_CONFIG = {
+    available: {
+      label: 'Trống - Sẵn sàng',
+      indicator: 'bg-green-500',
+      cardBorder: 'border-green-200',
+      cardBg: 'bg-green-50',
+      textColor: 'text-green-700',
+    },
+    occupied: {
+      label: 'Có khách',
+      indicator: 'bg-red-500',
+      cardBorder: 'border-red-200',
+      cardBg: 'bg-red-50',
+      textColor: 'text-red-700',
+    },
+    needs_cleaning: {
+      label: 'Cần dọn',
+      indicator: 'bg-yellow-500',
+      cardBorder: 'border-yellow-200',
+      cardBg: 'bg-yellow-50',
+      textColor: 'text-yellow-700',
+    },
+    maintenance: {
+      label: 'Đang sửa chữa',
+      indicator: 'bg-gray-400',
+      cardBorder: 'border-gray-200',
+      cardBg: 'bg-gray-50',
+      textColor: 'text-gray-600',
+    },
+  };
+
   return (
     <div className="space-y-6">
+      {/* Page Tab Switcher */}
+      <div className="flex gap-2 border-b border-gray-200 pb-0">
+        {[
+          { key: 'list' as PageTab, label: 'Danh sách phòng' },
+          { key: 'status' as PageTab, label: 'Trạng thái phòng' },
+        ].map(t => (
+          <button key={t.key} onClick={() => setPageTab(t.key)}
+            className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition -mb-px ${pageTab === t.key ? 'border-[#1a3a5c] text-[#1a3a5c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* STATUS TAB */}
+      {pageTab === 'status' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {ROOM_STATUS_EXTENDED.map(room => {
+              const cfg = STATUS_VIEW_CONFIG[room.status];
+              return (
+                <div key={room.id} className={`bg-white rounded-2xl border ${cfg.cardBorder} shadow-sm p-5 space-y-3`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{TYPE_ICON_MAP[room.type]}</span>
+                      <div>
+                        <p className="font-bold text-gray-800">{room.name}</p>
+                        {room.floor && <p className="text-xs text-gray-400">{room.floor}</p>}
+                      </div>
+                    </div>
+                    <span className={`w-4 h-4 rounded-full ${cfg.indicator} mt-1 flex-shrink-0 ring-4 ${cfg.indicator.replace('bg-', 'ring-').replace('-500', '-200').replace('-400', '-200')}`}></span>
+                  </div>
+
+                  <div className={`${cfg.cardBg} rounded-xl px-3 py-2`}>
+                    <p className={`text-sm font-semibold ${cfg.textColor}`}>
+                      {room.status === 'occupied'
+                        ? `Có khách — ${room.guestName} đến ${room.checkoutTime}`
+                        : cfg.label}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {room.status === 'available' && (
+                      <button className="flex-1 text-xs font-semibold bg-[#1a3a5c] text-white py-1.5 rounded-lg hover:bg-[#152e4a] transition">
+                        Đặt ngay
+                      </button>
+                    )}
+                    {room.status === 'occupied' && (
+                      <>
+                        <button className="flex-1 text-xs font-semibold bg-gray-100 text-gray-700 py-1.5 rounded-lg hover:bg-gray-200 transition">
+                          Chi tiết
+                        </button>
+                        <button className="flex-1 text-xs font-semibold bg-orange-100 text-orange-700 py-1.5 rounded-lg hover:bg-orange-200 transition">
+                          Nhắc giờ
+                        </button>
+                      </>
+                    )}
+                    {room.status === 'maintenance' && (
+                      <button className="flex-1 text-xs font-semibold bg-gray-100 text-gray-500 py-1.5 rounded-lg cursor-not-allowed" disabled>
+                        Không khả dụng
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Available Timeslots */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800 text-sm">Khung giờ trống hôm nay</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase">
+                    <th className="text-left px-5 py-3">Phòng / Bàn</th>
+                    <th className="text-left px-5 py-3">Loại</th>
+                    <th className="text-left px-5 py-3">Khung giờ trống</th>
+                    <th className="text-center px-5 py-3">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {AVAILABLE_TIMESLOTS.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3 font-semibold text-gray-800">{item.room}</td>
+                      <td className="px-5 py-3 text-gray-600">{TYPE_ICON_MAP[item.type as ResourceType]} {item.type === 'hotel' ? 'Khách sạn' : item.type === 'cafe' ? 'Cafe' : 'Rạp phim'}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {item.slots.map((slot, si) => (
+                            <span key={si} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">{slot}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <button className="text-xs bg-[#1a3a5c] text-white px-3 py-1 rounded-lg hover:bg-[#152e4a] transition font-medium">
+                          Đặt phòng
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIST TAB */}
+      {pageTab === 'list' && (<>
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
@@ -305,6 +470,7 @@ export default function RoomsPage() {
           )}
         </div>
       </div>
+      </>)}
     </div>
   );
 }

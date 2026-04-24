@@ -19,15 +19,23 @@ const NAV_GROUPS = [
       { href: '/dashboard', label: 'Tổng quan', icon: '📊', exact: true, roles: ['admin', 'branch_manager', 'accountant', 'staff'] },
       { href: '/dashboard/bookings', label: 'Đặt lịch', icon: '📅', roles: ['admin', 'branch_manager', 'staff'] },
       { href: '/dashboard/pos', label: 'Bán hàng POS', icon: '🛒', roles: ['admin', 'branch_manager', 'staff'] },
+      { href: '/dashboard/kpi', label: 'KPI & Mục tiêu', icon: '🎯', roles: ['admin', 'branch_manager'] },
     ],
   },
   {
-    label: 'TÀI NGUYÊN',
+    label: 'VẬN HÀNH',
     items: [
-      { href: '/dashboard/rooms', label: 'Phòng & Tài nguyên', icon: '🏨', roles: ['admin', 'branch_manager'] },
+      { href: '/dashboard/rooms', label: 'Phòng & Tài nguyên', icon: '🏨', roles: ['admin', 'branch_manager', 'staff'] },
+      { href: '/dashboard/housekeeping', label: 'Dọn vệ sinh', icon: '🧹', roles: ['admin', 'branch_manager', 'staff'] },
+      { href: '/dashboard/maintenance', label: 'Bảo trì sửa chữa', icon: '🔧', roles: ['admin', 'branch_manager', 'staff'] },
+      { href: '/dashboard/inventory', label: 'Kho hàng', icon: '🗃️', roles: ['admin', 'branch_manager', 'staff'] },
+    ],
+  },
+  {
+    label: 'DỊCH VỤ',
+    items: [
       { href: '/dashboard/packages', label: 'Gói dịch vụ', icon: '📦', roles: ['admin', 'branch_manager'] },
       { href: '/dashboard/promotions', label: 'Khuyến mãi', icon: '🎁', roles: ['admin', 'branch_manager'] },
-      { href: '/dashboard/inventory', label: 'Kho hàng', icon: '🗃️', roles: ['admin', 'branch_manager'] },
     ],
   },
   {

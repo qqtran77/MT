@@ -25,6 +25,244 @@ function StatCard({ icon, label, value, sub, color }: any) {
   );
 }
 
+const REVENUE_14D = [
+  { date: '11/5', val: 85000000 },
+  { date: '12/5', val: 120000000 },
+  { date: '13/5', val: 95000000 },
+  { date: '14/5', val: 145000000 },
+  { date: '15/5', val: 180000000 },
+  { date: '16/5', val: 210000000 },
+  { date: '17/5', val: 165000000 },
+  { date: '18/5', val: 130000000 },
+  { date: '19/5', val: 155000000 },
+  { date: '20/5', val: 190000000 },
+  { date: '21/5', val: 225000000 },
+  { date: '22/5', val: 175000000 },
+  { date: '23/5', val: 140000000 },
+  { date: '24/5', val: 195000000 },
+];
+
+const EXPIRING = [
+  { room: 'Phòng 201', guest: 'Nguyễn Văn A', checkOut: '12:00', minutesLeft: 18 },
+  { room: 'Phòng 305', guest: 'Trần Văn B', checkOut: '13:30', minutesLeft: 48 },
+  { room: 'Phòng 102', guest: 'Lê Thị C', checkOut: '14:00', minutesLeft: 72 },
+];
+
+const BIRTHDAYS = [
+  { name: 'Nguyễn Văn An', birthday: '25/05', tier: 'gold', phone: '0901234567' },
+  { name: 'Trần Thị Bích', birthday: '26/05', tier: 'platinum', phone: '0912345678' },
+  { name: 'Lê Hoàng Nam', birthday: '28/05', tier: 'silver', phone: '0923456789' },
+];
+
+const MAX_VAL = Math.max(...REVENUE_14D.map((d) => d.val));
+const Y_LABELS = [0, 50, 100, 150, 200];
+
+function fmtRevenue(n: number) {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}T`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(0)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}K`;
+  return `${n}`;
+}
+
+function RevenueChart() {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3 className="font-bold text-gray-800 mb-6 text-base">📊 Doanh thu 14 ngày gần nhất</h3>
+      <div className="flex gap-4">
+        {/* Y-axis */}
+        <div className="flex flex-col justify-between items-end pb-7 shrink-0">
+          {[...Y_LABELS].reverse().map((lbl) => (
+            <span key={lbl} className="text-xs text-gray-400 leading-none">
+              {lbl === 0 ? '0' : `${lbl}M`}
+            </span>
+          ))}
+        </div>
+
+        {/* Chart area */}
+        <div className="flex-1 min-w-0">
+          {/* Grid lines */}
+          <div className="relative" style={{ height: 180 }}>
+            {Y_LABELS.map((lbl, i) => (
+              <div
+                key={lbl}
+                className="absolute left-0 right-0 border-t border-gray-100"
+                style={{ bottom: `${(lbl / 200) * 100}%` }}
+              />
+            ))}
+            {/* Bars */}
+            <div className="absolute inset-0 flex items-end gap-1">
+              {REVENUE_14D.map((d) => {
+                const pct = Math.round((d.val / (200 * 1e6)) * 100);
+                return (
+                  <div key={d.date} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#1a3a5c] text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                      {d.date}: {d.val.toLocaleString('vi-VN')}đ
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1a3a5c]" />
+                    </div>
+                    <div
+                      className="w-full rounded-t-md bg-gradient-to-t from-[#1a3a5c] to-[#2e75b6] cursor-pointer hover:from-[#2e75b6] hover:to-[#5ba3d9] transition-colors"
+                      style={{ height: `${pct}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* X-axis labels */}
+          <div className="flex gap-1 mt-1">
+            {REVENUE_14D.map((d) => (
+              <div key={d.date} className="flex-1 text-center text-xs text-gray-400 truncate">
+                {d.date}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExpiringRooms() {
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+
+  const getBg = (min: number) => {
+    if (min < 30) return 'bg-red-50 border-red-200';
+    if (min < 60) return 'bg-yellow-50 border-yellow-200';
+    return 'bg-blue-50 border-blue-200';
+  };
+
+  const getTextColor = (min: number) => {
+    if (min < 30) return 'text-red-700';
+    if (min < 60) return 'text-yellow-700';
+    return 'text-blue-700';
+  };
+
+  const handleSend = (key: string) => {
+    setSentIds((prev) => new Set(prev).add(key));
+    setTimeout(() => {
+      setSentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }, 3000);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex-1 min-w-0">
+      <h3 className="font-bold text-gray-800 mb-4">⏰ Phòng sắp hết giờ</h3>
+      <div className="space-y-3">
+        {EXPIRING.map((item) => {
+          const key = `${item.room}-${item.guest}`;
+          const sent = sentIds.has(key);
+          return (
+            <div
+              key={key}
+              className={`rounded-xl border px-4 py-3 flex items-center justify-between gap-3 ${getBg(item.minutesLeft)}`}
+            >
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800 text-sm">{item.room}</p>
+                <p className="text-xs text-gray-500 truncate">{item.guest}</p>
+                <p className={`text-xs font-bold mt-0.5 ${getTextColor(item.minutesLeft)}`}>
+                  Checkout {item.checkOut} · còn {item.minutesLeft} phút
+                </p>
+              </div>
+              <div className="shrink-0">
+                {sent ? (
+                  <span className="text-xs text-green-600 font-semibold whitespace-nowrap">✅ Đã gửi SMS</span>
+                ) : (
+                  <button
+                    onClick={() => handleSend(key)}
+                    className="text-xs bg-[#1a3a5c] text-white px-3 py-1.5 rounded-lg hover:bg-[#2e75b6] transition-colors whitespace-nowrap font-medium"
+                  >
+                    Gửi nhắc
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BirthdayPanel() {
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+
+  const TIER_BADGE: Record<string, string> = {
+    gold: 'bg-yellow-100 text-yellow-700',
+    platinum: 'bg-purple-100 text-purple-700',
+    silver: 'bg-gray-100 text-gray-600',
+  };
+
+  const TIER_LABEL: Record<string, string> = {
+    gold: 'Gold',
+    platinum: 'Platinum',
+    silver: 'Silver',
+  };
+
+  const handleSend = (phone: string) => {
+    setSentIds((prev) => new Set(prev).add(phone));
+    setTimeout(() => {
+      setSentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(phone);
+        return next;
+      });
+    }, 3000);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex-1 min-w-0">
+      <h3 className="font-bold text-gray-800 mb-4">🎂 Sinh nhật khách hàng sắp tới</h3>
+      <div className="space-y-3">
+        {BIRTHDAYS.map((b) => {
+          const initials = b.name
+            .split(' ')
+            .slice(-2)
+            .map((w: string) => w[0])
+            .join('')
+            .toUpperCase();
+          const sent = sentIds.has(b.phone);
+          return (
+            <div
+              key={b.phone}
+              className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a3a5c] to-[#2e75b6] flex items-center justify-center text-white text-sm font-bold shrink-0">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-800 text-sm">{b.name}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${TIER_BADGE[b.tier]}`}>
+                    {TIER_LABEL[b.tier]}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400">🎁 {b.birthday}</p>
+              </div>
+              <div className="shrink-0">
+                {sent ? (
+                  <span className="text-xs text-green-600 font-semibold whitespace-nowrap">✅ Đã gửi</span>
+                ) : (
+                  <button
+                    onClick={() => handleSend(b.phone)}
+                    className="text-xs bg-pink-500 text-white px-3 py-1.5 rounded-lg hover:bg-pink-600 transition-colors whitespace-nowrap font-medium"
+                  >
+                    Gửi chúc mừng
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [dash, setDash] = useState<any>({});
   const [bookings, setBookings] = useState<any[]>([]);
@@ -40,13 +278,13 @@ export default function DashboardPage() {
       apiFetch('/inventory/low-stock').catch(() => []),
     ]).then(([d, b, inv, ls]) => {
       setDash(d || {});
-      setBookings(Array.isArray(b) ? b.slice(0,5) : []);
-      setInvoices(Array.isArray(inv) ? inv.slice(0,5) : []);
-      setLowStock(Array.isArray(ls) ? ls.slice(0,5) : []);
+      setBookings(Array.isArray(b) ? b.slice(0, 5) : []);
+      setInvoices(Array.isArray(inv) ? inv.slice(0, 5) : []);
+      setLowStock(Array.isArray(ls) ? ls.slice(0, 5) : []);
     }).finally(() => setLoading(false));
   }, []);
 
-  const fmt = (n: number) => n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(0)}K` : `${n}`;
+  const fmt = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(0)}K` : `${n}`;
 
   const STATUS_COLOR: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-700',
@@ -86,13 +324,25 @@ export default function DashboardPage() {
           { href: '/dashboard/customers', icon: '👤', label: 'Khách hàng', color: 'from-rose-500 to-pink-600' },
           { href: '/dashboard/pos', icon: '🛒', label: 'Bán hàng POS', color: 'from-teal-500 to-green-600' },
           { href: '/booking', icon: '🏨', label: 'Tạo đặt phòng mới', color: 'from-indigo-500 to-blue-600' },
-        ].map(item => (
-          <Link key={item.href} href={item.href}
-            className={`bg-gradient-to-br ${item.color} text-white rounded-xl p-4 flex flex-col gap-2 hover:opacity-90 hover:shadow-md transition-all`}>
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`bg-gradient-to-br ${item.color} text-white rounded-xl p-4 flex flex-col gap-2 hover:opacity-90 hover:shadow-md transition-all`}
+          >
             <span className="text-2xl">{item.icon}</span>
             <span className="text-sm font-semibold leading-tight">{item.label}</span>
           </Link>
         ))}
+      </div>
+
+      {/* Revenue chart */}
+      <RevenueChart />
+
+      {/* Expiry + Birthday side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ExpiringRooms />
+        <BirthdayPanel />
       </div>
 
       {/* Tables row */}
