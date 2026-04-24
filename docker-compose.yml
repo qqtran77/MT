@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: ckd-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret123
+      MONGO_INITDB_DATABASE: chuoi-kinh-doanh
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - ckd-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ckd-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - ckd-network
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: ckd-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      MONGODB_URI: mongodb://admin:secret123@mongodb:27017/chuoi-kinh-doanh?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      PORT: 3001
+      NODE_ENV: production
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - ckd-network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: ckd-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3001
+    depends_on:
+      - api
+    networks:
+      - ckd-network
+
+volumes:
+  mongo_data:
+
+networks:
+  ckd-network:
+    driver: bridge

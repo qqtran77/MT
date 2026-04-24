@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Chuỗi Kinh Doanh",
+    "slug": "chuoi-kinh-doanh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "chuoikinhdoanh",
+    "userInterfaceStyle": "automatic",
+    "ios": { "supportsTablet": true },
+    "android": { "package": "com.chuoikinhdoanh.app" },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": { "typedRoutes": true }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "chuoi-kinh-doanh",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "pnpm --filter @app/api start:dev",
+    "dev:web": "pnpm --filter @app/web dev",
+    "dev:mobile": "pnpm --filter @app/mobile start",
+    "build:api": "pnpm --filter @app/api build",
+    "build:web": "pnpm --filter @app/web build",
+    "install:all": "pnpm install"
+  },
+  "engines": { "node": ">=18.0.0", "pnpm": ">=8.0.0" }
+}
