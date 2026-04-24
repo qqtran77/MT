@@ -4,15 +4,15 @@ export type BookingDocument = Booking & Document;
 
 @Schema({ timestamps: true, collection: 'bookings' })
 export class Booking {
-  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true }) branchId: Types.ObjectId;
-  @Prop({ type: Types.ObjectId, ref: 'Tenant', required: true }) tenantId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Branch', default: null }) branchId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Tenant', default: null }) tenantId: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: 'Customer' }) customerId: Types.ObjectId;
   @Prop({ enum: ['hotel', 'cafe', 'cinema'], required: true }) industry: string;
   @Prop({ unique: true }) bookingNo: string;
   @Prop({ enum: ['pending','confirmed','checked_in','checked_out','cancelled'], default: 'pending' }) status: string;
   @Prop() resourceId: string; // roomId / tableId / showtimeId
   @Prop() resourceName: string;
-  @Prop({ required: true }) startDate: Date;
+  @Prop({ default: null }) startDate: Date;
   @Prop() endDate: Date;
   @Prop({ default: 1 }) guestCount: number;
   @Prop({ default: 0 }) totalAmount: number;

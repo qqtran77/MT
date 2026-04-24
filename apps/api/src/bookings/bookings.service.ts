@@ -22,16 +22,35 @@ export class BookingsService {
     return b;
   }
 
-  async create(dto: CreateBookingDto, user: any) {
-    return this.model.create({
+  async create(dto: any, user: any) {
+    // Support both old field names (type/customerName/checkIn) and new (industry/guestName/startDate)
+    const industry = dto.industry || dto.type || 'hotel';
+    const guestName = dto.guestName || dto.customerName || '';
+    const guestPhone = dto.guestPhone || dto.customerPhone || '';
+    const guestEmail = dto.guestEmail || dto.customerEmail || '';
+    const startDate = dto.startDate || dto.checkIn ? new Date(dto.startDate || dto.checkIn) : new Date();
+    const endDate = (dto.endDate || dto.checkOut) ? new Date(dto.endDate || dto.checkOut) : undefined;
+
+    const doc: any = {
       ...dto,
-      branchId: new Types.ObjectId(dto.branchId),
-      tenantId: user.tenantId,
+      industry,
+      guestName,
+      guestPhone,
+      guestEmail,
+      startDate,
+      endDate,
+      tenantId: user?.tenantId || null,
+      createdBy: user?._id || null,
       customerId: dto.customerId ? new Types.ObjectId(dto.customerId) : undefined,
-      createdBy: user._id,
-      startDate: new Date(dto.startDate),
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
-    });
+    };
+
+    if (dto.branchId && Types.ObjectId.isValid(dto.branchId)) {
+      doc.branchId = new Types.ObjectId(dto.branchId);
+    } else {
+      doc.branchId = null;
+    }
+
+    return this.model.create(doc);
   }
 
   async update(id: string, dto: UpdateBookingDto) {

@@ -56,6 +56,7 @@ function ConfirmPageContent() {
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('vnpay');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const depositAmount = Math.round(amount * 0.3);
 
@@ -69,24 +70,33 @@ function ConfirmPageContent() {
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
+    setSubmitError('');
     try {
       const booking = await bookingApi.createBooking({
+        industry: type,
         type,
         resourceId,
         resourceName,
+        guestName: data.customerName,
+        guestPhone: data.customerPhone,
+        guestEmail: data.customerEmail,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
         customerEmail: data.customerEmail,
         totalAmount: amount,
-        depositAmount: paymentMethod === 'deposit' ? depositAmount : amount,
+        depositAmount: paymentMethod === 'deposit' ? depositAmount : 0,
         paymentMethod,
+        startDate: checkIn || date || new Date().toISOString().split('T')[0],
+        endDate: checkOut || undefined,
         checkIn: checkIn || undefined,
         checkOut: checkOut || undefined,
-      });
-      router.push(`/booking/success?ref=${booking.referenceCode || 'CKD-SUCCESS'}&name=${encodeURIComponent(data.customerName)}&amount=${amount}`);
-    } catch {
-      // On API failure, still navigate to success with mock ref
-      router.push(`/booking/success?ref=CKD-${Date.now().toString(36).toUpperCase()}&name=${encodeURIComponent(data.customerName)}&amount=${amount}`);
+        note: seats ? `Ghế: ${seats}` : undefined,
+      } as any);
+      const ref = (booking as any)?.bookingNo || (booking as any)?.referenceCode || `CKD-${Date.now().toString(36).toUpperCase()}`;
+      router.push(`/booking/success?ref=${ref}&name=${encodeURIComponent(data.customerName)}&amount=${amount}`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Đặt dịch vụ thất bại. Vui lòng thử lại.';
+      setSubmitError(Array.isArray(msg) ? msg.join(', ') : msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -264,6 +274,11 @@ function ConfirmPageContent() {
               >
                 {isSubmitting ? 'Đang xử lý...' : 'Xác Nhận Đặt Dịch Vụ'}
               </Button>
+              {submitError && (
+                <div className="mt-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                  ❌ {submitError}
+                </div>
+              )}
             </form>
           </div>
 
